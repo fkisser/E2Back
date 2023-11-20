@@ -83,10 +83,19 @@ export const createUser = async (req: Request, res: Response) => {
 };
 export const updateUser = async (req: Request, res: Response) => {
 	const { DNI } = req.params;
-	const { dni, ...data } = req.body;
+	const data = req.body;
 	Object.keys(data).forEach((key) => {
-		data[key] = data[key].trim();
+		if (key !== "dni") data[key] = data[key].trim();
 	});
+	if (Object.keys(data).includes("dni")) {
+		const userDNI: IUser | null = await User.findOne({ dni: data.dni });
+		if (userDNI) {
+			res.json({
+				msg: "Ya existe un usuario con ese DNI",
+			});
+			return;
+		}
+	}
 	if (Object.keys(data).includes("mail")) {
 		const userMail = await User.findOne({ mail: data.mail });
 		if (userMail) {
@@ -96,9 +105,13 @@ export const updateUser = async (req: Request, res: Response) => {
 			return;
 		}
 	}
-	const user = await User.findOneAndUpdate({ dni: DNI }, data, {
-		new: true,
-	});
+	const user = await User.findOneAndUpdate(
+		{ dni: DNI },
+		{ ...data },
+		{
+			new: true,
+		}
+	);
 	user
 		? res.json({
 				msg: "Usuario actualizado con éxito",
