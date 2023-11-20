@@ -101,7 +101,7 @@ const invalidUser = (): void => {
 };
 export const createUser = async (): Promise<void> => {
 	let run = true;
-	let user: IUser = new User();
+	const userData: IUser = { name: "", dni: 0, mail: "" };
 	while (run) {
 		const userName = await inquirer.prompt([
 			{
@@ -115,7 +115,7 @@ export const createUser = async (): Promise<void> => {
 				`${chalk.red("Nombre y apellido no puede ser un campo vacío")}`
 			);
 		} else {
-			user.name = userName.name;
+			userData.name = userName.name;
 			run = false;
 		}
 	}
@@ -133,7 +133,7 @@ export const createUser = async (): Promise<void> => {
 				`${chalk.red("DNI debe ser un número entre 1.000.000 y 100.000.000")}`
 			);
 		} else {
-			user.dni = userDNI.dni;
+			userData.dni = userDNI.dni;
 			run = false;
 		}
 	}
@@ -151,9 +151,19 @@ export const createUser = async (): Promise<void> => {
 				`${chalk.red("El mail debe tener formato correo@correo.dominio")}`
 			);
 		} else {
-			user.mail = userMail.mail;
+			userData.mail = userMail.mail;
 			run = false;
 		}
 	}
-	console.log(user);
+	try {
+		const response = await axios.post(
+			`http://localhost:8080/usuarios`,
+			userData
+		);
+		console.log(`${response.data.msg}`);
+		await selectedUser(userData);
+	} catch (error) {
+		invalidUser();
+	}
+	return;
 };
